@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import MDAnalysis as mda
 from reforge.mdsystem.gmxmd import GmxSystem, GmxRun, get_ntomp
@@ -12,6 +13,7 @@ dt = 0.020  # Time step in picoseconds
 total_time = 500  # Total simulation time in nanoseconds
 NSTEPS = int(total_time * 1e3 / dt)  # Number of MD steps for production run
 
+
 def setup(*args):
     setup_martini(*args)
 
@@ -24,15 +26,16 @@ def workflow(sysdir, sysname, runname):
 def setup_martini(sysdir, sysname):
     ### FOR CG PROTEIN+/RNA SYSTEMS ###
     mdsys = GmxSystem(sysdir, sysname)
-    inpdb = mdsys.root / INPDB
+    in_dir = os.environ.get("PDB_INPUT_DIR")
+    inpdb = Path(in_dir) / f"{sysname}.pdb"
     mdsys.prepare_files(pour_martini=True) # be careful it can overwrite later files
     mdsys.clean_pdb_mm(inpdb, add_missing_atoms=True, add_hydrogens=True, pH=7.0) # Generates Amber ff names in PDB
     # mdsys.clean_pdb_gmx(inpdb, clinput="8\n 7\n", ignh="no", renum="yes") # 8 for CHARMM, sometimes you need to refer to AMBER FF
     mdsys.split_chains()
 
     # 1.2. COARSE-GRAINING. Done separately for each chain. If don"t want to split some of them, it needs to be done manually. 
-    # mdsys.martinize_proteins_en(ef=1000, el=0.3, eu=0.9, from_ff='charmm', p="backbone", pf=500, append=False)  # Martini + Elastic network FF 
-    mdsys.martinize_proteins_go(go_eps=12.0, go_low=0.3, go_up=0.75, from_ff='amber', p="backbone", pf=500, ignh="", append=False) # Martini + Go-network FF
+    mdsys.martinize_proteins_en(ef=1000, el=0.3, eu=0.9, from_ff='charmm', p="backbone", pf=500, append=False)  # Martini + Elastic network FF 
+    # mdsys.martinize_proteins_go(go_eps=12.0, go_low=0.3, go_up=0.75, from_ff='amber', p="backbone", pf=500, ignh="", append=False) # Martini + Go-network FF
     mdsys.make_cg_topology() # CG topology. Returns mdsys.systop ("mdsys.top") file
     mdsys.make_cg_structure() # CG structure. Returns mdsys.solupdb ("solute.pdb") file
     
@@ -55,7 +58,6 @@ def md_npt(sysdir, sysname, runname):
     mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
     mdrun.mdrun(deffnm="em", ntomp=ntomp)
     mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
-    a = 1 / 0
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
     mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")
     mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu")

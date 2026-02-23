@@ -52,8 +52,21 @@ def cleanup_failure(
 						remove_system_on_failure=remove_system_on_failure,
 					)
 					if target_dir is not None and target_dir.exists():
+						# If we are currently inside the directory we're about to delete,
+						# rmtree may fail (cwd becomes an unlinked dir). Move to a safe dir.
+						try:
+							cwd_r = Path.cwd().resolve()
+							target_r = target_dir.resolve()
+							if cwd_r.is_relative_to(target_r):
+								os.chdir(_dest)
+						except Exception:
+							pass
+
 						_copy_logs(target_dir, _dest, log_glob=log_glob)
-						shutil.rmtree(target_dir, ignore_errors=True)
+						try:
+							shutil.rmtree(target_dir)
+						except Exception as rm_exc:
+							print(f"cleanup_failure: failed to remove {target_dir}: {rm_exc}", file=sys.stderr)
 				except Exception as cleanup_exc:
 					print(f"cleanup_failure: cleanup error: {cleanup_exc}", file=sys.stderr)
 				raise
@@ -80,7 +93,7 @@ def _infer_target_dir(
 	if not isinstance(sysdir, (str, os.PathLike)) or not isinstance(sysname, (str, os.PathLike)):
 		return None
 
-	sys_root = Path(sysdir) / Path(sysname)
+	sys_root = Path(sysdir) / sysname
 	if remove_system_on_failure:
 		return sys_root
 
