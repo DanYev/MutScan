@@ -36,7 +36,7 @@ def setup_martini(sysdir, sysname):
     mdsys.make_cg_structure() # CG structure. Returns mdsys.solupdb ("solute.pdb") file
     
     # 1.3. Coarse graining is *hopefully* done. Need to add solvent and ions
-    mdsys.make_box(d="1.2", bt="dodecahedron")
+    mdsys.make_box(d="1.0", bt="dodecahedron")
     solvent = mdsys.root / "water.gro"
     mdsys.solvate(cp=mdsys.solupdb, cs=solvent, radius="0.17") # all kwargs go to gmx solvate command
     mdsys.add_bulk_ions(conc=0.10, pname="NA", nname="CL")
@@ -51,7 +51,7 @@ def md_npt(sysdir, sysname, runname):
     mdrun.prepare_files()
     ntomp = get_ntomp()
     mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
-    mdrun.mdrun(deffnm="em", ntomp=ntomp, bonded="gpu")
+    mdrun.mdrun(deffnm="em", ntomp=ntomp)
     mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
     mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")
@@ -64,7 +64,7 @@ def extend(sysdir, sysname, runname):
     dt = 0.020 # picoseconds
     t_ext = 10000 # nanoseconds
     nsteps = int(t_ext * 1e3 / dt)
-    mdrun.mdrun(deffnm="md", cpi="md.cpt", ntomp=ntomp, nsteps=NSTEPS, ) # bonded="gpu") 
+    mdrun.mdrun(deffnm="md", cpi="md.cpt", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu") 
     
     
 def trjconv(sysdir, sysname, runname, **kwargs):
