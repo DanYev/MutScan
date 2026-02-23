@@ -2,6 +2,7 @@ from pathlib import Path
 import MDAnalysis as mda
 from reforge.mdsystem.gmxmd import GmxSystem, GmxRun, get_ntomp
 from reforge.utils import clean_dir, get_logger
+from utils import execution_check
 
 logger = get_logger()
 
@@ -10,6 +11,7 @@ INPDB = 'input.pdb'
 dt = 0.020  # Time step in picoseconds
 total_time = 500  # Total simulation time in nanoseconds
 NSTEPS = int(total_time * 1e3 / dt)  # Number of MD steps for production run
+
 
 def workflow(sysdir, sysname, runname):
     md_npt(sysdir, sysname, runname)
@@ -25,7 +27,7 @@ def setup_martini(sysdir, sysname):
     mdsys = GmxSystem(sysdir, sysname)
     inpdb = mdsys.root / INPDB
     mdsys.prepare_files(pour_martini=True) # be careful it can overwrite later files
-    mdsys.clean_pdb_mm(inpdb, add_missing_atoms=False, add_hydrogens=False, pH=7.0) # Generates Amber ff names in PDB
+    mdsys.clean_pdb_mm(inpdb, add_missing_atoms=True, add_hydrogens=True, pH=7.0) # Generates Amber ff names in PDB
     # mdsys.clean_pdb_gmx(inpdb, clinput="8\n 7\n", ignh="no", renum="yes") # 8 for CHARMM, sometimes you need to refer to AMBER FF
     mdsys.split_chains()
 
@@ -51,7 +53,7 @@ def md_npt(sysdir, sysname, runname):
     mdrun.prepare_files()
     ntomp = get_ntomp()
     mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
-    mdrun.mdrun(deffnm="em", ntomp=ntomp)
+    mdrun.mdrun(deffnm="em", ntomp=ntomp, bonded="gpu")
     mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
     mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")

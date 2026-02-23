@@ -8,13 +8,14 @@ __pycache__/
 # Data and output directories
 analysis/
 archive/
+error*/
 data/
-systems*/
-tmp*/
+png/
 slurm_output/
 slurm_jobs/
-png/
-modeller/
+systems*/
+test*/
+tmp*/
 *.xyz
 *.cif
 

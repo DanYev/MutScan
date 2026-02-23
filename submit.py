@@ -60,7 +60,7 @@ def prepare_systems():
 
 if __name__ == "__main__":
     INPUT_DIR = Path("pdbs")
-    MDSYS_DIR = Path("systems")
+    MDSYS_DIR = Path("test")
     prepare_systems()
 
     pdir = Path(__file__).parent
@@ -68,13 +68,15 @@ if __name__ == "__main__":
 
     sysdir = str(MDSYS_DIR)
     sysnames = os.listdir(sysdir)
+    sysnames = ["1BTL"]
     runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
+    runs = ["mdrun_1",]
 
     submit = True
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
-    # sys_job('setup', submit=submit)
+    # sys_job('setup', submit=submit, t='00-01:00:00')
     run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
     # run_job('md_npt', submit=submit, G='1', c='4', mem='2G', t='00-02:00:00')
     # run_job('extend', submit=submit, G='1', c='4', mem='2G')

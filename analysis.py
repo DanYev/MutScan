@@ -1,8 +1,6 @@
-import inspect
 import multiprocessing as mp
 import os
 from pathlib import Path
-import sys
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import MDAnalysis as mda
@@ -16,8 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from reforge import io, mdm
 from reforge.mdsystem.mdsystem import MDSystem, MDRun
 from reforge.utils import clean_dir, get_logger
-print(os.getcwd())
-#import plots
+import plots
 
 logger = get_logger(__name__)
 
@@ -33,6 +30,7 @@ def workflow(sysdir, sysname, runname):
 ################################################################################
 ### PCA/Clustering ###
 ################################################################################
+
 def pca_trajs(sysdir, sysname, selection=SELECTION, step=1):
     mdsys = MDSystem(sysdir, sysname)
     # clean_dir(mdsys.datdir, "*")
