@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.pyc
+*.egg*
+.pytest_cache/
+*.pkl
+
+# Data and output directories
+analysis/
+archive/
+data/
+systems*/
+tmp*/
+slurm_output/
+slurm_jobs/
+pdbs/
+png/
+modeller/
+*.xyz
+*.cif
+
+# Scientific data files
+*.npz
+*.npy
+*.h5
+*.hdf5
+*.dat
+*.ali
+*.ini
+
+# Build and compiled files
+*.o
+*.c
+*.so
+*.pyf
+*.mod
+*.dSYM
+
+# Archives and checksums
+*.tar.gz
+*.md5
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.*
+
+# IDE and editor files
+.idea/
+.vscode/
+workspace.xml
+*.swp
+*~
+.adxv*
+
+# System files
+.DS_Store
+._*
+.metadata
+.nfs*
+
+# Profiling and temporary files
+*.cprof
+*.tmp
+*.out
+
+# Other
+*todo.txt
+custom_config.py
+.cache/
+.*.csv
+file_header_*.txt
+*.pdf
