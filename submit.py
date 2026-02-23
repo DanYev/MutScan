@@ -60,22 +60,20 @@ def prepare_systems():
 
 if __name__ == "__main__":
     INPUT_DIR = Path("pdbs")
-    MDSYS_DIR = Path("test")
-    prepare_systems()
+    MDSYS_DIR = Path("systems")
 
     pdir = Path(__file__).parent
     shscript = str(pdir / 'run.sh')
 
     sysdir = str(MDSYS_DIR)
     sysnames = os.listdir(sysdir)
-    sysnames = ["1BTL"]
     runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
-    runs = ["mdrun_1",]
 
     submit = True
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
+    # prepare_systems()
     # sys_job('setup', submit=submit, t='00-01:00:00')
     # run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
     # run_job('md_npt', submit=submit, G='1', c='4', mem='2G', t='00-02:00:00')
@@ -86,7 +84,7 @@ if __name__ == "__main__":
     pyscript = str(pdir / 'analysis.py')
     # sys_job('pca_trajs', submit=submit) # PCA
     # sys_job('clust_cov', submit=submit) # Clustering
-    # run_job('rms_analysis', submit=False) # RMSF/RMSD
+    # run_job('rms_analysis', submit=submit) # RMSF/RMSD
     # run_job('cov_analysis', submit=submit) # DFI/DCI
     # sys_job('get_means_sems', submit=submit) 
     # run_job('tdlrt_analysis', submit=submit) # TDLRT

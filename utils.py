@@ -93,20 +93,6 @@ def _infer_target_dir(
 	return sys_root
 
 
-def _safe_dest_dir(exec_dir: Path, target_dir: Path) -> Path:
-	"""Ensure destination for moved logs is outside the directory being removed."""
-	try:
-		exec_dir_r = exec_dir.resolve()
-		target_dir_r = target_dir.resolve()
-		try:
-			exec_dir_r.relative_to(target_dir_r)
-		except Exception:
-			return exec_dir_r
-		return target_dir_r.parent
-	except Exception:
-		return exec_dir
-
-
 def _copy_logs(target_dir: Path, dest_dir: Path, *, log_glob: str) -> None:
 	if not dest_dir.exists():
 		dest_dir.mkdir(parents=True, exist_ok=True)
