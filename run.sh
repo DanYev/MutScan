@@ -63,6 +63,10 @@ archive_failure() {
 			# Fallback: copy any frozen scripts sitting next to the wrapper.
 			cp -f "${script_dir}/script_"*.py "$report_dir/" || true
 		fi
+		# Also copy any *.log files that were written alongside the wrapper/script.
+		if compgen -G "${script_dir}/*.log" >/dev/null; then
+			cp -f "${script_dir}/"*.log "$report_dir/" || true
+		fi
 	fi
 
 	# SLURM default logs for this job (per #SBATCH -o/-e above).
