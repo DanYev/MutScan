@@ -27,7 +27,7 @@ def cleanup_failure(
 	   - If args look like (sysdir, sysname, ...): delete Path(sysdir)/sysname
 	   - If remove_system_on_failure=True: always delete Path(sysdir)/sysname
 	2) Before deleting, find all matching log files (default: '*.log') under the
-	   target directory and move them into the *execution directory* (the current
+	   target directory and copy them into the *execution directory* (the current
 	   working directory at the moment the wrapped function is entered).
 
 	Usage:
@@ -41,8 +41,7 @@ def cleanup_failure(
 	def decorator(func: Callable[..., T]) -> Callable[..., T]:
 		@wraps(func)
 		def wrapper(*args, **kwargs):
-			exec_dir = Path.cwd()
-			script_dir = Path(__file__).parent
+			_dest = Path(sys.argv[0]).parent
 			try:
 				return func(*args, **kwargs)
 			except Exception:
@@ -53,8 +52,7 @@ def cleanup_failure(
 						remove_system_on_failure=remove_system_on_failure,
 					)
 					if target_dir is not None and target_dir.exists():
-						_dest = script_dir
-						_move_logs(target_dir, _dest, log_glob=log_glob)
+						_copy_logs(target_dir, _dest, log_glob=log_glob)
 						shutil.rmtree(target_dir, ignore_errors=True)
 				except Exception as cleanup_exc:
 					print(f"cleanup_failure: cleanup error: {cleanup_exc}", file=sys.stderr)
@@ -109,7 +107,7 @@ def _safe_dest_dir(exec_dir: Path, target_dir: Path) -> Path:
 		return exec_dir
 
 
-def _move_logs(target_dir: Path, dest_dir: Path, *, log_glob: str) -> None:
+def _copy_logs(target_dir: Path, dest_dir: Path, *, log_glob: str) -> None:
 	if not dest_dir.exists():
 		dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,14 +123,8 @@ def _move_logs(target_dir: Path, dest_dir: Path, *, log_glob: str) -> None:
 		try:
 			if dest_path.exists():
 				dest_path.unlink()
-			shutil.move(str(log_path), str(dest_path))
+			shutil.copy2(str(log_path), str(dest_path))
 		except Exception:
-			# Fall back to copy if move fails (permissions / cross-device / etc.)
-			try:
-				if dest_path.exists():
-					dest_path.unlink()
-				shutil.copy2(str(log_path), str(dest_path))
-			except Exception:
-				pass
+			pass
 
 

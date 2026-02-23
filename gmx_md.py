@@ -55,8 +55,8 @@ def md_npt(sysdir, sysname, runname):
     mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
     mdrun.mdrun(deffnm="em", ntomp=ntomp)
     mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
-    mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
     a = 1 / 0
+    mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
     mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")
     mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu")
     
@@ -82,8 +82,6 @@ def trjconv(sysdir, sysname, runname, **kwargs):
     mdrun.trjconv(clinput="0\n 0\n", s="topology.tpr", f="conv.xtc", o="topology.pdb", fit="rot+trans", e=0)
     mdrun.trjconv(clinput="0\n 0\n", s="topology.tpr", f="conv.xtc", o="samples.xtc", fit="rot+trans")
     clean_dir(mdrun.rundir)
-
-
 
 
 if __name__ == "__main__":
