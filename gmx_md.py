@@ -2,7 +2,7 @@ from pathlib import Path
 import MDAnalysis as mda
 from reforge.mdsystem.gmxmd import GmxSystem, GmxRun, get_ntomp
 from reforge.utils import clean_dir, get_logger
-from utils import execution_check
+from utils import cleanup_failure
 
 logger = get_logger()
 
@@ -12,16 +12,15 @@ dt = 0.020  # Time step in picoseconds
 total_time = 500  # Total simulation time in nanoseconds
 NSTEPS = int(total_time * 1e3 / dt)  # Number of MD steps for production run
 
+def setup(*args):
+    setup_martini(*args)
 
 def workflow(sysdir, sysname, runname):
     md_npt(sysdir, sysname, runname)
     trjconv(sysdir, sysname, runname)
 
 
-def setup(*args):
-    setup_martini(*args)
-
-
+@cleanup_failure
 def setup_martini(sysdir, sysname):
     ### FOR CG PROTEIN+/RNA SYSTEMS ###
     mdsys = GmxSystem(sysdir, sysname)
@@ -48,14 +47,16 @@ def setup_martini(sysdir, sysname):
     mdsys.make_system_ndx(backbone_atoms=["BB", "BB2"])
     
     
+@cleanup_failure
 def md_npt(sysdir, sysname, runname): 
     mdrun = GmxRun(sysdir, sysname, runname)
     mdrun.prepare_files()
     ntomp = get_ntomp()
     mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
-    mdrun.mdrun(deffnm="em", ntomp=ntomp, bonded="gpu")
+    mdrun.mdrun(deffnm="em", ntomp=ntomp)
     mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
+    a = 1 / 0
     mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")
     mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu")
     
