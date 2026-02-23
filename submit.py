@@ -59,11 +59,11 @@ def get_sysnames():
     return [f.stem for f in PDB_INPUT_DIR.iterdir() if f.suffix == ".pdb"]
 
 
-def job_is_done(sysdir, sysname, runname='mdrun_1'):
+def job_is_done(sysdir, sysname, runname=None):
     if DO_ONLY_FAILED:
-        if (Path(sysdir) / sysname / "mdruns" / runname).exists():
+        if runname is not None and (Path(sysdir) / sysname / "mdruns" / runname).exists():
             return True
-        if (Path(sysdir) / sysname).exists():
+        if runname is None and (Path(sysdir) / sysname).exists():
             return True
     return False
 
@@ -79,12 +79,12 @@ if __name__ == "__main__":
     # runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
     runs = ["mdrun_1", "mdrun_2"]
 
-    submit = False
+    submit = True
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
-    sys_job('setup', submit=submit, t='00-01:00:00')
-    # run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
+    # sys_job('setup', submit=submit, t='00-01:00:00')
+    run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
     # run_job('md_npt', submit=submit, G='1', c='4', mem='2G', t='00-02:00:00')
     # run_job('extend', submit=submit, G='1', c='4', mem='2G')
     # run_job('trjconv', submit=submit)
