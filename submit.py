@@ -59,7 +59,7 @@ def prepare_systems():
 
 
 if __name__ == "__main__":
-    INPUT_DIR = Path("../pdb/")
+    INPUT_DIR = Path("pdbs")
     MDSYS_DIR = Path("systems")
     prepare_systems()
 
@@ -74,12 +74,11 @@ if __name__ == "__main__":
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
-    sys_job('setup', submit=submit)
-    # run_job('workflow', submit=submit, G='1', c='4', mem='2G', t='00-04:00:00')
+    # sys_job('setup', submit=submit)
+    run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
     # run_job('md_npt', submit=submit, G='1', c='4', mem='2G', t='00-02:00:00')
     # run_job('extend', submit=submit, G='1', c='4', mem='2G')
     # run_job('trjconv', submit=submit)
-    # run_job('main', submit=submit)
 
     ##### Analysis #####
     pyscript = str(pdir / 'analysis.py')
