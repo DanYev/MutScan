@@ -35,16 +35,16 @@ def setup_martini(sysdir, sysname):
 
     # 1.2. COARSE-GRAINING. Done separately for each chain. If don"t want to split some of them, it needs to be done manually. 
     # mdsys.martinize_proteins_en(ef=1000, el=0.3, eu=0.9, from_ff='charmm', p="backbone", pf=500, append=False)  # Martini + Elastic network FF 
-    mdsys.martinize_proteins_go(go_eps=12.0, go_low=0.3, go_up=0.75, 
+    mdsys.martinize_proteins_go(go_eps=10.0, go_low=0.3, go_up=0.8, 
         from_ff='amber', p="backbone", pf=500, ignh="", append=False) # Martini + Go-network FF
     mdsys.make_cg_topology() # CG topology. Returns mdsys.systop ("mdsys.top") file
     mdsys.make_cg_structure() # CG structure. Returns mdsys.solupdb ("solute.pdb") file
     
     # 1.3. Coarse graining is *hopefully* done. Need to add solvent and ions
-    mdsys.make_box(d="1.0", bt="dodecahedron")
+    mdsys.make_box(d="1.2", bt="dodecahedron")
     solvent = mdsys.root / "water.gro"
     mdsys.solvate(cp=mdsys.solupdb, cs=solvent, radius="0.17") # all kwargs go to gmx solvate command
-    mdsys.add_bulk_ions(conc=0.10, pname="NA", nname="CL")
+    mdsys.add_bulk_ions(conc=0.0, pname="NA", nname="CL")
 
     # 1.4. Need index files to make selections with GROMACS. Very annoying but wcyd. Order:
     # 1.System 2.Solute 3.Backbone 4.Solvent 5...chains. Can add custom groups using AtomList.write_to_ndx()
@@ -56,11 +56,14 @@ def md_npt(sysdir, sysname, runname):
     mdrun = GmxRun(sysdir, sysname, runname)
     mdrun.prepare_files()
     ntomp = get_ntomp()
-    mdrun.empp(f=mdrun.mdpdir / "em_cg.mdp")
+    mdpdir = Path("mdp")
+    mdrun.empp(f=mdpdir / "em_cg.mdp")
     mdrun.mdrun(deffnm="em", ntomp=ntomp)
-    mdrun.eqpp(f=mdrun.mdpdir / "eq_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
+    mdrun.eqpp(f=mdpdir / "hu_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
+    mdrun.mdrun(deffnm="hu", ntomp=ntomp, bonded="gpu")
+    mdrun.eqpp(f=mdpdir / "eq_cg.mdp", c="hu.gro", r="hu.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
-    mdrun.mdpp(f=mdrun.mdpdir / "md_cg.mdp", maxwarn="1")
+    mdrun.mdpp(f=mdpdir / "md_cg.mdp", maxwarn="1")
     mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu")
     
     

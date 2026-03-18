@@ -182,7 +182,11 @@ def get_means_sems(sysdir, sysname):
 ### RMSD/RMSF Analysis ###
 ################################################################################
 
-def rms_analysis(sysdir, sysname, runname, selection=SELECTION, step=1):
+def rms_analysis(sysdir, sysname, runname, selection=SELECTION, 
+    start=500, stop=None, step=1):
+    # We are saving every 200 ps = 10000 steps
+    # b = 500 skips first 100 ns, 
+    # e = 2500 takes us to 500 ns, 
     mdsys = MDSystem(sysdir, sysname)
     mdrun = MDRun(sysdir, sysname, runname)
     rmsdir = mdrun.rmsdir
@@ -198,7 +202,7 @@ def rms_analysis(sysdir, sysname, runname, selection=SELECTION, step=1):
     rmsd_analysis.run(step=step)
     # Calculate RMSF
     rmsf_analysis = rms.RMSF(atoms)
-    rmsf_analysis.run(step=step)
+    rmsf_analysis.run(start=start, stop=stop, step=step)
     # Get residue IDs
     residue_ids = np.array([atom.resid for atom in atoms])
     # Save arrays

@@ -1,0 +1,42 @@
+define                          = -DPOSRES
+integrator                      = md
+dt                              = 0.010 
+nsteps                          = 100000 ;  1 000 000 * 0.010 ps = 1 ns 
+nstxout-compressed              = 10000
+compressed-x-precision          = 100
+nstenergy                       = 10000
+nstlog                          = 10000 
+
+nstcomm                         = 100
+comm-grps                       = System
+
+cutoff-scheme                   = Verlet
+nstlist                         = 20
+pbc                             = xyz
+verlet-buffer-tolerance         = 0.005
+
+coulombtype                     = reaction-field 
+rcoulomb                        = 1.1
+epsilon_r                       = 15    ; 2.5 (with polarizable water)
+epsilon_rf                      = 0
+vdw_type                        = cutoff  
+vdw-modifier                    = Potential-shift-verlet
+rvdw                            = 1.1
+
+tcoupl                          = v-rescale 
+tc-grps                         = System
+tau-t                           = 1.0 
+ref-t                           = 300 
+
+Pcoupl                          = c-rescale
+Pcoupltype                      = isotropic
+tau-p                           = 4.0
+compressibility                 = 3.4e-4 
+ref-p                           = 1.0 
+refcoord-scaling                = all
+
+gen_vel                         = no
+continuation                    = yes
+
+lincs-order                     = 6
+lincs-iter                      = 2
