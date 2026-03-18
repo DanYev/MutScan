@@ -14,16 +14,13 @@ total_time = 500  # Total simulation time in nanoseconds
 NSTEPS = int(total_time * 1e3 / dt)  # Number of MD steps for production run
 
 
-def setup(*args):
-    setup_martini(*args)
-
 def workflow(sysdir, sysname, runname):
     md_npt(sysdir, sysname, runname)
     trjconv(sysdir, sysname, runname)
 
 
 @cleanup_failure
-def setup_martini(sysdir, sysname):
+def setup(sysdir, sysname):
     ### FOR CG PROTEIN+/RNA SYSTEMS ###
     mdsys = GmxSystem(sysdir, sysname)
     in_dir = os.environ.get("PDB_INPUT_DIR")
@@ -56,10 +53,10 @@ def md_npt(sysdir, sysname, runname):
     mdrun = GmxRun(sysdir, sysname, runname)
     mdrun.prepare_files()
     ntomp = get_ntomp()
-    mdpdir = Path("mdp")
+    mdpdir = Path(os.environ.get("MDP_DIR"))
     mdrun.empp(f=mdpdir / "em_cg.mdp")
     mdrun.mdrun(deffnm="em", ntomp=ntomp)
-    mdrun.eqpp(f=mdpdir / "hu_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
+    mdrun.hupp(f=mdpdir / "hu_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="hu", ntomp=ntomp, bonded="gpu")
     mdrun.eqpp(f=mdpdir / "eq_cg.mdp", c="hu.gro", r="hu.gro", maxwarn="1") 
     mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")

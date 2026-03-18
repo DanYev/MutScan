@@ -69,17 +69,19 @@ def job_is_done(sysdir, sysname, runname=None):
 
 
 if __name__ == "__main__":
-    PDB_INPUT_DIR = Path("pdbs")
+    PDB_INPUT_DIR = Path("pdbs").resolve() 
+    MDP_DIR = Path("mdp").resolve()
     DO_ONLY_FAILED = True
 
     os.environ["PDB_INPUT_DIR"] = str(PDB_INPUT_DIR)
+    os.environ["MDP_DIR"] = str(MDP_DIR)
 
     sysdir = "test" 
     sysnames = get_sysnames()
     # runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
     runs = ["mdrun_1", "mdrun_2"]
 
-    submit = True
+    submit = False
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
