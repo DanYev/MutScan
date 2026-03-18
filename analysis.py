@@ -160,7 +160,7 @@ def cov_analysis(sysdir, sysname, runname, selection=SELECTION):
     logger.info(f'Selecting atoms for covariance analysis: {selection}')
     ag = u.atoms.select_atoms(selection)
     clean_dir(mdrun.covdir, "*npy")
-    mdrun.get_covmats(u, ag, sample_rate=1, b=500, e=2500, n=50, outtag="covmat") 
+    mdrun.get_covmats(u, ag, sample_rate=1, b=500, e=int(1e6), n=100, outtag="covmat") 
     mdrun.get_pertmats()
     mdrun.get_dfi(outtag="dfi", old_norm=True)
     mdrun.get_dci(outtag="dci", asym=False)
