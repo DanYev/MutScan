@@ -71,27 +71,33 @@ def job_is_done(sysdir, sysname, runname=None):
 if __name__ == "__main__":
     PDB_INPUT_DIR = Path("pdbs").resolve() 
     MDP_DIR = Path("mdp").resolve()
-    DO_ONLY_FAILED = True
+
+    DO_ONLY_FAILED = False
+    submit = True
 
     os.environ["PDB_INPUT_DIR"] = str(PDB_INPUT_DIR)
     os.environ["MDP_DIR"] = str(MDP_DIR)
 
     sysdir = "test" 
     sysnames = get_sysnames()
-    # runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
-    runs = ["mdrun_1", "mdrun_2"]
-
-    submit = False
+    sysnames = ["1BTL"]
+    runs = ["mdrun_1", "mdrun_2", "mdrun_3", "mdrun_4"]
+    # runs = ["mdrun_1", "mdrun_2"]
 
     ##### For MD #####
     pyscript = str(pdir / 'gmx_md.py')
     # sys_job('setup', submit=submit, t='00-01:00:00')
-    run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
+    # run_job('workflow', submit=submit, G='1', c='2', mem='2G', t='00-04:00:00')
     # run_job('md_npt', submit=submit, G='1', c='4', mem='2G', t='00-02:00:00')
     # run_job('extend', submit=submit, G='1', c='4', mem='2G')
     # run_job('trjconv', submit=submit)
 
     ##### Analysis #####
+    # READ THIS !!!
+    # NOTE: rms_analysis, cov_analysis and get_means_sems are run in workflow, 
+    # so no need to run them separately. 
+    # Just run workflow and it will do everything.
+    ################################################################################### 
     pyscript = str(pdir / 'analysis.py')
     # sys_job('pca_trajs', submit=submit) # PCA
     # sys_job('clust_cov', submit=submit) # Clustering

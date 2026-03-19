@@ -4,6 +4,7 @@ import MDAnalysis as mda
 from reforge.mdsystem.gmxmd import GmxSystem, GmxRun, get_ntomp
 from reforge.utils import clean_dir, get_logger
 from utils import cleanup_failure
+import analysis
 
 logger = get_logger()
 
@@ -15,8 +16,12 @@ NSTEPS = int(total_time * 1e3 / dt)  # Number of MD steps for production run
 
 
 def workflow(sysdir, sysname, runname):
-    md_npt(sysdir, sysname, runname)
-    trjconv(sysdir, sysname, runname)
+    args = sysdir, sysname, runname
+    md_npt(*args)
+    trjconv(*args)
+    analysis.cov_analysis(*args)
+    analysis.rms_analysis(*args)
+    analysis.get_means_sems(sysdir, sysname)
 
 
 @cleanup_failure
@@ -32,7 +37,7 @@ def setup(sysdir, sysname):
 
     # 1.2. COARSE-GRAINING. Done separately for each chain. If don"t want to split some of them, it needs to be done manually. 
     # mdsys.martinize_proteins_en(ef=1000, el=0.3, eu=0.9, from_ff='charmm', p="backbone", pf=500, append=False)  # Martini + Elastic network FF 
-    mdsys.martinize_proteins_go(go_eps=10.0, go_low=0.3, go_up=0.8, 
+    mdsys.martinize_proteins_go(go_eps=12.0, go_low=0.3, go_up=0.85, 
         from_ff='amber', p="backbone", pf=500, ignh="", append=False) # Martini + Go-network FF
     mdsys.make_cg_topology() # CG topology. Returns mdsys.systop ("mdsys.top") file
     mdsys.make_cg_structure() # CG structure. Returns mdsys.solupdb ("solute.pdb") file
@@ -40,7 +45,7 @@ def setup(sysdir, sysname):
     # 1.3. Coarse graining is *hopefully* done. Need to add solvent and ions
     mdsys.make_box(d="1.2", bt="dodecahedron")
     solvent = mdsys.root / "water.gro"
-    mdsys.solvate(cp=mdsys.solupdb, cs=solvent, radius="0.17") # all kwargs go to gmx solvate command
+    mdsys.solvate(cp=mdsys.solupdb, cs=solvent, radius="0.20") # all kwargs go to gmx solvate command
     mdsys.add_bulk_ions(conc=0.0, pname="NA", nname="CL")
 
     # 1.4. Need index files to make selections with GROMACS. Very annoying but wcyd. Order:
@@ -57,11 +62,11 @@ def md_npt(sysdir, sysname, runname):
     mdrun.empp(f=mdpdir / "em_cg.mdp")
     mdrun.mdrun(deffnm="em", ntomp=ntomp)
     mdrun.hupp(f=mdpdir / "hu_cg.mdp", c="em.gro", r="em.gro", maxwarn="1") 
-    mdrun.mdrun(deffnm="hu", ntomp=ntomp, bonded="gpu")
+    mdrun.mdrun(deffnm="hu", ntomp=ntomp)
     mdrun.eqpp(f=mdpdir / "eq_cg.mdp", c="hu.gro", r="hu.gro", maxwarn="1") 
-    mdrun.mdrun(deffnm="eq", ntomp=ntomp, bonded="gpu")
+    mdrun.mdrun(deffnm="eq", ntomp=ntomp)
     mdrun.mdpp(f=mdpdir / "md_cg.mdp", maxwarn="1")
-    mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu")
+    mdrun.mdrun(deffnm="md", ntomp=ntomp, nsteps=NSTEPS)
     
     
 def extend(sysdir, sysname, runname):    
@@ -70,7 +75,7 @@ def extend(sysdir, sysname, runname):
     dt = 0.020 # picoseconds
     t_ext = 10000 # nanoseconds
     nsteps = int(t_ext * 1e3 / dt)
-    mdrun.mdrun(deffnm="md", cpi="md.cpt", ntomp=ntomp, nsteps=NSTEPS, bonded="gpu") 
+    mdrun.mdrun(deffnm="md", cpi="md.cpt", ntomp=ntomp, nsteps=NSTEPS)
     
     
 def trjconv(sysdir, sysname, runname, **kwargs):

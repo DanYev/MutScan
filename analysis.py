@@ -19,13 +19,15 @@ import plots
 logger = get_logger(__name__)
 
 INPDB = 'input.pdb'
-SELECTION = "name CA" 
+SELECTION = "name BB" 
 TRJEXT = 'xtc' # 'xtc' or 'trr'
 
-def workflow(sysdir, sysname, runname):
-    cov_analysis(sysdir, sysname)
-    rms_analysis(sysdir, sysname, runname)
-    get_means_sems(sysdir, sysname)
+# We are saving every 200 ps = 10000 steps
+# b = 500 skips first 100 ns, 
+# e = 2500 takes us to 500 ns, 
+START = 500  # 500 will skip first 100 ns
+STOP = None  # take all frames after start
+STEP = 1     # use every frame after start
 
 ################################################################################
 ### PCA/Clustering ###
@@ -42,7 +44,7 @@ def pca_trajs(sysdir, sysname, selection=SELECTION, step=1):
     u = mda.Universe(tops[0], trajs, in_memory_step=step, ) # in_memory=True)
     logger.info(f'Selecting atoms for PCA analysis: {selection}')
     ag = u.atoms.select_atoms(selection)
-    positions = io.read_positions(u, ag, sample_rate=1, b=0, e=1e9).T
+    positions = io.read_positions(u, ag, sample_rate=STEP, b=START, e=STOP).T
     # PCA
     logger.info("Doing PCA")
     frames = np.arange(len(u.trajectory))
@@ -123,7 +125,7 @@ def _plot_traj_pca(data, i, j, ids, labels, mdsys, skip=1, alpha=0.3, out_tag="p
     plt.close()
 
 
-def clust_cov(sysdir, sysname, selection = SELECTION):
+def clust_cov(sysdir, sysname, selection=SELECTION):
     logger.info("Doing cluster covariance analysis")
     mdsys = MDSystem(sysdir, sysname)
     clusters = io.pull_files(mdsys.datdir, "cluster*.xtc")
@@ -149,9 +151,7 @@ def clust_cov(sysdir, sysname, selection = SELECTION):
 ################################################################################
 
 def cov_analysis(sysdir, sysname, runname, selection=SELECTION):
-    # We are saving every 200 ps = 10000 steps
-    # b = 500 skips first 100 ns, 
-    # e = 2500 takes us to 500 ns, 
+
     mdrun = MDRun(sysdir, sysname, runname)
     mdrun.covdir.mkdir(exist_ok=True, parents=True)
     top = mdrun.rundir / "topology.pdb"
@@ -160,7 +160,7 @@ def cov_analysis(sysdir, sysname, runname, selection=SELECTION):
     logger.info(f'Selecting atoms for covariance analysis: {selection}')
     ag = u.atoms.select_atoms(selection)
     clean_dir(mdrun.covdir, "*npy")
-    mdrun.get_covmats(u, ag, sample_rate=1, b=500, e=int(1e6), n=100, outtag="covmat") 
+    mdrun.get_covmats(u, ag, sample_rate=STEP, b=START, e=STOP, n=100, outtag="covmat") 
     mdrun.get_pertmats()
     mdrun.get_dfi(outtag="dfi", old_norm=True)
     mdrun.get_dci(outtag="dci", asym=False)
@@ -182,11 +182,9 @@ def get_means_sems(sysdir, sysname):
 ### RMSD/RMSF Analysis ###
 ################################################################################
 
-def rms_analysis(sysdir, sysname, runname, selection=SELECTION, 
-    start=500, stop=None, step=1):
-    # We are saving every 200 ps = 10000 steps
-    # b = 500 skips first 100 ns, 
-    # e = 2500 takes us to 500 ns, 
+def rms_analysis(sysdir, sysname, runname,
+    selection=SELECTION, 
+    start=START, stop=STOP, step=STEP):
     mdsys = MDSystem(sysdir, sysname)
     mdrun = MDRun(sysdir, sysname, runname)
     rmsdir = mdrun.rmsdir
